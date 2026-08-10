@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>CreativeFlow | Gestión creativa</title>
+
+    <meta
+      name="description"
+      content="Aplicación backend para gestionar proyectos creativos."
+    >
+
+    <link rel="stylesheet" href="/css/styles.css">
+  </head>
+
+  <body>
+    <header class="header">
+      <a class="logo" href="/">CreativeFlow</a>
+      <span class="module-label">Proyecto Módulo 6</span>
+    </header>
+
+    <main class="container">
+      <section class="hero">
+        <div class="hero-content">
+          <p class="eyebrow">Node.js + Express</p>
+
+          <h1>Gestiona tus proyectos creativos en un solo lugar</h1>
+
+          <p class="hero-description">
+            CreativeFlow es una aplicación backend diseñada para organizar
+            usuarios, proyectos y recursos creativos.
+          </p>
+
+          <div class="actions">
+            <a class="button primary" href="/status">
+              Consultar servidor
+            </a>
+
+            <a class="button secondary" href="#features">
+              Conocer el proyecto
+            </a>
+          </div>
+        </div>
+
+        <aside class="server-card">
+          <div class="server-status">
+            <span class="status-dot"></span>
+            Servidor disponible
+          </div>
+
+          <h2>Rutas públicas</h2>
+
+          <div class="endpoint">
+            <span class="method">GET</span>
+            <code>/</code>
+          </div>
+
+          <div class="endpoint">
+            <span class="method">GET</span>
+            <code>/status</code>
+          </div>
+        </aside>
+      </section>
+
+      <section id="features" class="features">
+        <article class="feature-card">
+          <span class="feature-number">01</span>
+          <h2>Organización modular</h2>
+          <p>
+            El servidor se estructura mediante rutas, controladores,
+            middlewares y servicios.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <span class="feature-number">02</span>
+          <h2>Contenido web</h2>
+          <p>
+            Express entrega contenido HTML, archivos estáticos y respuestas
+            estructuradas en JSON.
+          </p>
+        </article>
+
+        <article class="feature-card">
+          <span class="feature-number">03</span>
+          <h2>Proyecto escalable</h2>
+          <p>
+            La estructura está preparada para incorporar base de datos,
+            autenticación y una API REST.
+          </p>
+        </article>
+      </section>
+    </main>
+
+    <footer class="footer">
+      <p>CreativeFlow · Desarrollado por Johanna Romero</p>
+    </footer>
+  </body>
+</html>

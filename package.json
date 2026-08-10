@@ -1,0 +1,26 @@
+{
+  "name": "creativeflow-backend",
+  "version": "1.0.0",
+  "description": "Aplicación backend para la gestión de proyectos creativos",
+  "keywords": [
+    "node",
+    "express",
+    "backend",
+    "creativeflow"
+  ],
+  "license": "ISC",
+  "author": "Johanna Romero",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+   "start": "node index.js",
+   "dev": "nodemon index.js"
+  },
+  "dependencies": {
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  }
+}
