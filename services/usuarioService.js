@@ -1,5 +1,13 @@
+const bcrypt = require("bcryptjs");
 const { Op } = require("sequelize");
 const { Usuario } = require("../models");
+
+const crearError = (mensaje, estado) => {
+  const error = new Error(mensaje);
+  error.status = estado;
+  error.statusCode = estado;
+  return error;
+};
 
 const listarUsuarios = async ({
   nombre = "",
@@ -16,13 +24,10 @@ const listarUsuarios = async ({
     numeroLimite < 1 ||
     numeroLimite > 100
   ) {
-    const error = new Error(
-      "La página y el límite deben ser números enteros positivos. El límite máximo es 100."
+    throw crearError(
+      "La página y el límite deben ser números enteros positivos. El límite máximo es 100.",
+      400
     );
-
-    error.status = 400;
-    error.statusCode = 400;
-    throw error;
   }
 
   const filtros = {};
@@ -53,6 +58,78 @@ const listarUsuarios = async ({
   };
 };
 
+const crearUsuario = async ({
+  nombre,
+  email,
+  password,
+  rol = "cliente",
+}) => {
+  if (
+    typeof nombre !== "string" ||
+    typeof email !== "string" ||
+    typeof password !== "string" ||
+    !nombre.trim() ||
+    !email.trim() ||
+    !password
+  ) {
+    throw crearError(
+      "Los campos nombre, email y password son obligatorios.",
+      400
+    );
+  }
+
+  if (password.length < 8) {
+    throw crearError(
+      "La contraseña debe tener al menos 8 caracteres.",
+      400
+    );
+  }
+
+  const rolesPermitidos = [
+    "administrador",
+    "creativo",
+    "cliente",
+  ];
+
+  if (!rolesPermitidos.includes(rol)) {
+    throw crearError(
+      "El rol debe ser administrador, creativo o cliente.",
+      400
+    );
+  }
+
+  const emailNormalizado = email.trim().toLowerCase();
+
+  const usuarioExistente = await Usuario.unscoped().findOne({
+    where: {
+      email: emailNormalizado,
+    },
+  });
+
+  if (usuarioExistente) {
+    throw crearError(
+      "Ya existe un usuario registrado con ese correo electrónico.",
+      409
+    );
+  }
+
+  const passwordHash = await bcrypt.hash(password, 10);
+
+  const usuario = await Usuario.unscoped().create({
+    nombre: nombre.trim(),
+    email: emailNormalizado,
+    passwordHash,
+    rol,
+    activo: true,
+  });
+
+  const usuarioSeguro = usuario.toJSON();
+  delete usuarioSeguro.passwordHash;
+
+  return usuarioSeguro;
+};
+
 module.exports = {
   listarUsuarios,
+  crearUsuario,
 };

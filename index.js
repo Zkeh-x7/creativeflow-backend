@@ -12,20 +12,20 @@ const { sequelize } = require("./models");
 const { rutaNoEncontrada } = require("./middlewares/notFound");
 const { manejarErrores } = require("./middlewares/errorHandler");
 
-// Crea la aplicación de Express.
 const app = express();
-
-// Obtiene el puerto desde .env o utiliza 3000.
 const PORT = process.env.PORT || 3000;
 
-// Permite servir archivos estáticos desde public.
-app.use(
-  express.static(path.join(__dirname, "public"), {
-    index: false
-  })
-);
+// Procesa solicitudes con contenido JSON.
+app.use(express.json());
 
-// Conecta las rutas externas.
+// Procesa datos enviados desde formularios.
+app.use(express.urlencoded({ extended: true }));
+
+// Sirve los archivos estáticos.
+app.use(express.static(path.join(__dirname, "public"), {
+  index: false,
+}));
+
 app.use("/usuarios", usuarioRoutes);
 app.use("/", indexRoutes);
 
