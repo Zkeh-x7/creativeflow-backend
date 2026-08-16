@@ -8,6 +8,7 @@ const path = require("path");
 // Importa las rutas y middlewares de la aplicación.
 const indexRoutes = require("./routes/indexRoutes");
 const usuarioRoutes = require("./routes/usuarioRoutes");
+const proyectoRoutes = require("./routes/proyectoRoutes");
 const { sequelize } = require("./models");
 const { rutaNoEncontrada } = require("./middlewares/notFound");
 const { manejarErrores } = require("./middlewares/errorHandler");
@@ -27,6 +28,7 @@ app.use(express.static(path.join(__dirname, "public"), {
 }));
 
 app.use("/usuarios", usuarioRoutes);
+app.use("/proyectos", proyectoRoutes);
 app.use("/", indexRoutes);
 
 // Captura las solicitudes a rutas inexistentes.
