@@ -129,7 +129,151 @@ const crearUsuario = async ({
   return usuarioSeguro;
 };
 
+const validarIdUsuario = (id) => {
+  const numeroId = Number(id);
+
+  if (!Number.isInteger(numeroId) || numeroId < 1) {
+    throw crearError(
+      "El ID del usuario debe ser un número entero positivo.",
+      400
+    );
+  }
+
+  return numeroId;
+};
+
+const actualizarUsuario = async (id, datosRecibidos) => {
+  const numeroId = validarIdUsuario(id);
+
+  const usuario = await Usuario.unscoped().findByPk(numeroId);
+
+  if (!usuario) {
+    throw crearError("Usuario no encontrado.", 404);
+  }
+
+  const datosActualizados = {};
+
+  if (datosRecibidos.nombre !== undefined) {
+    if (
+      typeof datosRecibidos.nombre !== "string" ||
+      !datosRecibidos.nombre.trim()
+    ) {
+      throw crearError("El nombre no puede estar vacío.", 400);
+    }
+
+    datosActualizados.nombre = datosRecibidos.nombre.trim();
+  }
+
+  if (datosRecibidos.email !== undefined) {
+    if (
+      typeof datosRecibidos.email !== "string" ||
+      !datosRecibidos.email.trim()
+    ) {
+      throw crearError("El correo electrónico no es válido.", 400);
+    }
+
+    const emailNormalizado = datosRecibidos.email
+      .trim()
+      .toLowerCase();
+
+    const usuarioConMismoEmail = await Usuario.unscoped().findOne({
+      where: {
+        email: emailNormalizado,
+        id: {
+          [Op.ne]: numeroId,
+        },
+      },
+    });
+
+    if (usuarioConMismoEmail) {
+      throw crearError(
+        "Ya existe otro usuario registrado con ese correo electrónico.",
+        409
+      );
+    }
+
+    datosActualizados.email = emailNormalizado;
+  }
+
+  if (datosRecibidos.rol !== undefined) {
+    const rolesPermitidos = [
+      "administrador",
+      "creativo",
+      "cliente",
+    ];
+
+    if (!rolesPermitidos.includes(datosRecibidos.rol)) {
+      throw crearError(
+        "El rol debe ser administrador, creativo o cliente.",
+        400
+      );
+    }
+
+    datosActualizados.rol = datosRecibidos.rol;
+  }
+
+  if (datosRecibidos.activo !== undefined) {
+    if (typeof datosRecibidos.activo !== "boolean") {
+      throw crearError(
+        "El campo activo debe ser verdadero o falso.",
+        400
+      );
+    }
+
+    datosActualizados.activo = datosRecibidos.activo;
+  }
+
+  if (datosRecibidos.password !== undefined) {
+    if (
+      typeof datosRecibidos.password !== "string" ||
+      datosRecibidos.password.length < 8
+    ) {
+      throw crearError(
+        "La contraseña debe tener al menos 8 caracteres.",
+        400
+      );
+    }
+
+    datosActualizados.passwordHash = await bcrypt.hash(
+      datosRecibidos.password,
+      10
+    );
+  }
+
+  if (Object.keys(datosActualizados).length === 0) {
+    throw crearError(
+      "Debes enviar al menos un campo permitido para actualizar.",
+      400
+    );
+  }
+
+  await usuario.update(datosActualizados);
+
+  const usuarioSeguro = usuario.toJSON();
+  delete usuarioSeguro.passwordHash;
+
+  return usuarioSeguro;
+};
+
+const eliminarUsuario = async (id) => {
+  const numeroId = validarIdUsuario(id);
+
+  const usuario = await Usuario.findByPk(numeroId);
+
+  if (!usuario) {
+    throw crearError("Usuario no encontrado.", 404);
+  }
+
+  const usuarioEliminado = usuario.toJSON();
+
+  await usuario.destroy();
+
+  return usuarioEliminado;
+};
+
 module.exports = {
   listarUsuarios,
   crearUsuario,
+  actualizarUsuario,
+  eliminarUsuario,
 };
