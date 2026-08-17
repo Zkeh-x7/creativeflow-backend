@@ -3,6 +3,7 @@ const {
   crearUsuario,
   actualizarUsuario,
   eliminarUsuario,
+  obtenerUsuarioConProyectos,
 } = require("../services/usuarioService");
 
 const obtenerUsuarios = async (req, res) => {
@@ -48,9 +49,20 @@ const borrarUsuario = async (req, res) => {
   });
 };
 
+const consultarUsuarioConProyectos = async (req, res) => {
+  const usuario = await obtenerUsuarioConProyectos(req.params.id);
+
+  res.status(200).json({
+    status: "success",
+    message: "Usuario y proyectos obtenidos correctamente.",
+    data: usuario,
+  });
+};
+
 module.exports = {
   obtenerUsuarios,
   registrarUsuario,
   modificarUsuario,
   borrarUsuario,
+  consultarUsuarioConProyectos,
 };

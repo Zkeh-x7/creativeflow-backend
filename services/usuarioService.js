@@ -271,9 +271,49 @@ const eliminarUsuario = async (id) => {
   return usuarioEliminado;
 };
 
+const obtenerUsuarioConProyectos = async (id) => {
+  const numeroId = Number(id);
+
+  if (!Number.isInteger(numeroId) || numeroId < 1) {
+    throw crearError(
+      "El ID del usuario debe ser un número entero positivo.",
+      400
+    );
+  }
+
+  const usuario = await Usuario.findByPk(numeroId, {
+    attributes: {
+      exclude: ["passwordHash"],
+    },
+    include: [
+      {
+        association: "proyectos",
+        attributes: [
+          "id",
+          "titulo",
+          "descripcion",
+          "estado",
+          "fechaEntrega",
+          "presupuesto",
+          "usuarioId",
+          "createdAt",
+          "updatedAt",
+        ],
+      },
+    ],
+  });
+
+  if (!usuario) {
+    throw crearError("Usuario no encontrado.", 404);
+  }
+
+  return usuario;
+};
+
 module.exports = {
   listarUsuarios,
   crearUsuario,
   actualizarUsuario,
   eliminarUsuario,
+  obtenerUsuarioConProyectos,
 };
