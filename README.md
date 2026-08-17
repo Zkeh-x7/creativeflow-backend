@@ -392,6 +392,49 @@ En caso de error:
 - `.env.example` no contiene contraseñas reales.
 - Las consultas ORM reducen la manipulación directa de SQL.
 
+## Justificación de decisiones técnicas
+
+### Elección de PostgreSQL y el cliente de conexión
+
+Se eligió PostgreSQL porque es una base de datos relacional robusta, permite definir relaciones entre entidades y soporta transacciones para mantener la consistencia de los datos.
+
+Se utilizó `pg` porque es el controlador de PostgreSQL para Node.js y permite que Sequelize se comunique con la base de datos. Sequelize facilita la creación de modelos, consultas, validaciones, relaciones y transacciones.
+
+### Protección de datos sensibles
+
+Las credenciales de PostgreSQL se almacenan en el archivo `.env`, el cual está excluido de Git mediante `.gitignore`. El archivo `.env.example` solamente contiene valores de referencia.
+
+Las contraseñas de los usuarios se cifran con bcrypt antes de almacenarse y `passwordHash` se excluye de todas las respuestas públicas.
+
+### Actualización controlada de campos
+
+En las operaciones `PUT` solamente se permiten campos definidos previamente. Esto evita modificar accidentalmente identificadores, fechas de creación, contraseñas cifradas u otros valores internos.
+
+También permite validar cada campo antes de actualizarlo y conservar los valores que no fueron enviados en la solicitud.
+
+### Validaciones aplicadas
+
+La aplicación valida:
+
+- Que los identificadores sean números enteros positivos.
+- Que el registro exista antes de actualizarlo o eliminarlo.
+- Que los campos obligatorios no estén vacíos.
+- Que los correos electrónicos no estén duplicados.
+- Que los estados de los proyectos sean válidos.
+- Que los presupuestos sean números iguales o superiores a cero.
+- Que las fechas utilicen el formato esperado.
+- Que el usuario responsable de un proyecto exista.
+
+### Ventajas del ORM
+
+Sequelize permite trabajar con objetos y métodos de JavaScript en lugar de escribir SQL manual para cada operación. Esto facilita la reutilización del código, las validaciones, las relaciones entre modelos y el mantenimiento de la aplicación.
+
+La comparación realizada demuestra que la consulta SQL manual y la consulta con Sequelize devuelven los mismos resultados. El ORM reduce código repetitivo, mientras que el SQL manual ofrece mayor control directo sobre consultas específicas.
+
+### Uso de transacciones
+
+La transacción agrupa la creación de un usuario y un proyecto como una sola operación lógica. Si alguna acción falla, `ROLLBACK` revierte todos los cambios, evitando que la base de datos quede con registros incompletos o inconsistentes.
+
 ## Repositorio
 
 [CreativeFlow Backend en GitHub](https://github.com/Zkeh-x7/creativeflow-backend)
