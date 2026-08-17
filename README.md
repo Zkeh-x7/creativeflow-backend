@@ -1,291 +1,397 @@
-# CreativeFlow Backend
+# CreativeFlow Backend — Módulo 7
 
-Aplicación web desarrollada con Node.js y Express para la gestión de proyectos creativos. Esta primera versión corresponde al Módulo 6 del curso Desarrollo de Aplicaciones Full Stack JavaScript Trainee.
+API REST desarrollada con Node.js, Express, PostgreSQL y Sequelize para administrar los usuarios y proyectos de CreativeFlow.
 
-El proyecto permite servir contenido HTML, entregar archivos estáticos, consultar el estado del servidor en formato JSON y registrar accesos en un archivo de texto.
+Este proyecto corresponde al Módulo 7 del curso **Desarrollo de Aplicaciones Full Stack JavaScript Trainee**.
 
-## Objetivos
+## Autora
 
-- Configurar un servidor utilizando Node.js y Express.
-- Implementar rutas públicas con respuestas HTML y JSON.
-- Servir archivos estáticos desde la carpeta `public`.
-- Registrar accesos mediante `fs.appendFile()`.
-- Aplicar una arquitectura modular.
-- Manejar rutas inexistentes y errores.
-- Preparar el proyecto para incorporar una base de datos y autenticación.
+**Johanna Romero**
+
+## Objetivo del proyecto
+
+Implementar persistencia de datos en una aplicación backend mediante PostgreSQL, consultas SQL, Sequelize ORM, relaciones entre modelos, operaciones CRUD y transacciones con rollback.
 
 ## Tecnologías utilizadas
 
 - Node.js
 - Express
-- npm
+- PostgreSQL
+- Sequelize ORM
+- pg
+- pg-hstore
 - dotenv
-- nodemon
-- HTML5
-- CSS3
-- Git y GitHub
+- bcryptjs
+- Nodemon
+- Git
+- GitHub
 
-## Node.js y Express
+## Funcionalidades
 
-### ¿Qué es Node.js?
+- Conexión de Node.js con PostgreSQL.
+- Configuración mediante variables de entorno.
+- CRUD completo de usuarios.
+- CRUD completo de proyectos.
+- Filtros y paginación.
+- Validación de identificadores y datos recibidos.
+- Protección de contraseñas mediante bcrypt.
+- Exclusión de `passwordHash` en las respuestas.
+- Relación uno-a-muchos entre usuarios y proyectos.
+- Consulta de proyectos con su usuario responsable.
+- Consulta de un usuario con todos sus proyectos.
+- Comparación entre SQL manual y Sequelize ORM.
+- Transacción con dos operaciones.
+- Error controlado y ejecución de rollback.
+- Manejo centralizado de errores.
+- Respuestas JSON consistentes.
 
-Node.js es un entorno de ejecución que permite utilizar JavaScript fuera del navegador. Se utiliza para crear servidores, aplicaciones web, herramientas de línea de comandos y servicios backend.
-
-Su arquitectura orientada a eventos permite procesar solicitudes de forma eficiente. Además, incorpora npm, el gestor de paquetes utilizado para instalar las dependencias del proyecto.
-
-### ¿Qué aporta Express?
-
-Express es un framework que simplifica el desarrollo de aplicaciones web con Node.js. Proporciona herramientas para:
-
-- Crear rutas.
-- Procesar solicitudes y respuestas HTTP.
-- Implementar middlewares.
-- Servir archivos estáticos.
-- Organizar la aplicación de forma modular.
-- Centralizar el manejo de errores.
-
-Node.js proporciona el entorno de ejecución, mientras que Express facilita la construcción y organización del servidor web.
-
-## Flujo cliente-servidor
-
-```mermaid
-flowchart TD
-    A[Cliente o navegador]
-    B[Servidor Express]
-    C[Rutas y middlewares]
-    D[Controladores y servicios]
-    E[Respuesta HTML o JSON]
-
-    A -->|Solicitud HTTP| B
-    B --> C
-    C --> D
-    D --> E
-    E -->|Respuesta HTTP| A
-```
-
-1. El cliente realiza una solicitud HTTP.
-2. Express recibe la solicitud.
-3. El router identifica la ruta correspondiente.
-4. Los middlewares ejecutan tareas intermedias.
-5. El controlador genera la respuesta.
-6. El servidor devuelve contenido HTML o JSON.
-
-## Estructura del proyecto
+## Estructura principal
 
 ```text
 creativeflow-backend/
+├── config/
+│   └── database.js
 ├── controllers/
-│   └── homeController.js
-├── logs/
-│   └── log.txt
+│   ├── homeController.js
+│   ├── proyectoController.js
+│   └── usuarioController.js
 ├── middlewares/
 │   ├── errorHandler.js
-│   ├── notFound.js
-│   └── visitLogger.js
-├── public/
-│   ├── css/
-│   │   └── styles.css
-│   └── index.html
+│   └── notFound.js
+├── models/
+│   ├── index.js
+│   ├── Proyecto.js
+│   └── Usuario.js
 ├── routes/
-│   └── indexRoutes.js
+│   ├── indexRoutes.js
+│   ├── proyectoRoutes.js
+│   └── usuarioRoutes.js
+├── scripts/
+│   ├── compararConsultas.js
+│   ├── probarTransaccion.js
+│   ├── seedDatabase.js
+│   ├── syncDatabase.js
+│   └── testDatabase.js
 ├── services/
-│   └── logService.js
+│   ├── logService.js
+│   ├── proyectoService.js
+│   └── usuarioService.js
+├── public/
 ├── .env.example
 ├── .gitignore
 ├── index.js
-├── package-lock.json
 ├── package.json
 └── README.md
 ```
 
-## Requisitos del sistema
+## Requisitos previos
 
-Antes de ejecutar el proyecto se necesita:
+Antes de ejecutar el proyecto se debe contar con:
 
-- Node.js versión 18 o superior.
-- npm.
-- Una terminal o consola de comandos.
-- Un navegador web.
+- Node.js instalado.
+- PostgreSQL instalado y funcionando.
+- Git instalado.
+- Una base de datos llamada `creativeflow_db`.
+- Un usuario de PostgreSQL llamado `creativeflow_user`.
 
 ## Instalación
 
-1. Abre una terminal dentro de la carpeta del proyecto.
+Clonar el repositorio:
 
-2. Instala las dependencias:
+```bash
+git clone https://github.com/Zkeh-x7/creativeflow-backend.git
+```
+
+Ingresar al proyecto:
+
+```bash
+cd creativeflow-backend
+```
+
+Instalar las dependencias:
 
 ```bash
 npm install
 ```
 
-3. Crea el archivo `.env` a partir de `.env.example`.
+## Configuración de PostgreSQL
 
-En Windows:
+La base de datos y el usuario pueden crearse desde pgAdmin 4 utilizando:
 
-```cmd
-copy .env.example .env
+```sql
+CREATE USER creativeflow_user
+WITH PASSWORD 'tu_contrasena_segura';
+
+CREATE DATABASE creativeflow_db
+OWNER creativeflow_user;
 ```
 
-En macOS o Linux:
+Estos comandos deben ejecutarse solamente durante la configuración inicial.
 
-```bash
-cp .env.example .env
-```
+## Variables de entorno
 
-4. Comprueba que `.env` contenga:
+Crear un archivo `.env` en la raíz del proyecto utilizando `.env.example` como referencia:
 
 ```env
 PORT=3000
+NODE_ENV=development
+
+DB_HOST=localhost
+DB_PORT=5432
+DB_NAME=creativeflow_db
+DB_USER=creativeflow_user
+DB_PASSWORD=tu_contrasena_real
+DB_DIALECT=postgres
+```
+
+El archivo `.env` contiene información privada y no debe subirse a GitHub.
+
+El archivo `.env.example` contiene únicamente valores de ejemplo y sí forma parte del repositorio.
+
+## Preparación de la base de datos
+
+Comprobar la conexión:
+
+```bash
+npm run db:test
+```
+
+Crear o sincronizar las tablas:
+
+```bash
+npm run db:sync
+```
+
+Insertar los datos iniciales:
+
+```bash
+npm run db:seed
 ```
 
 ## Ejecución
 
-### Modo normal
-
-```bash
-npm start
-```
-
-Este comando ejecuta:
-
-```bash
-node index.js
-```
-
-### Modo de desarrollo
+Ejecutar el proyecto en desarrollo:
 
 ```bash
 npm run dev
 ```
 
-Este comando utiliza nodemon para reiniciar automáticamente el servidor cada vez que se modifica un archivo JavaScript.
+También se puede iniciar sin Nodemon:
 
-Después de iniciar el servidor, abre:
+```bash
+npm start
+```
+
+El servidor queda disponible en:
 
 ```text
 http://localhost:3000
 ```
 
-## Rutas disponibles
+## Endpoints de usuarios
 
-| Método | Ruta | Respuesta | Descripción |
-|---|---|---|---|
-| GET | `/` | HTML | Muestra la página principal de CreativeFlow. |
-| GET | `/status` | JSON | Informa el estado actual del servidor. |
-| Cualquiera | Ruta inexistente | JSON | Devuelve un error 404 estructurado. |
+| Método | Endpoint | Descripción |
+|---|---|---|
+| GET | `/usuarios` | Obtiene usuarios con filtros y paginación |
+| POST | `/usuarios` | Crea un usuario y cifra su contraseña |
+| PUT | `/usuarios/:id` | Actualiza un usuario |
+| DELETE | `/usuarios/:id` | Elimina un usuario |
+| GET | `/usuarios/:id/proyectos` | Obtiene un usuario con sus proyectos |
 
-### Ejemplo de `/status`
+### Filtros de usuarios
+
+Ejemplo de búsqueda por nombre:
+
+```text
+GET /usuarios?nombre=Ana
+```
+
+Ejemplo de paginación:
+
+```text
+GET /usuarios?pagina=1&limite=10
+```
+
+### Ejemplo de creación de usuario
+
+```json
+{
+  "nombre": "Laura Mendez",
+  "email": "laura.mendez@creativeflow.cl",
+  "password": "Laura123!",
+  "rol": "creativo"
+}
+```
+
+La contraseña se cifra antes de guardarse y `passwordHash` no se incluye en las respuestas de la API.
+
+## Endpoints de proyectos
+
+| Método | Endpoint | Descripción |
+|---|---|---|
+| GET | `/proyectos` | Obtiene proyectos con filtros y paginación |
+| POST | `/proyectos` | Crea un proyecto |
+| PUT | `/proyectos/:id` | Actualiza un proyecto |
+| DELETE | `/proyectos/:id` | Elimina un proyecto |
+
+### Filtros de proyectos
+
+Búsqueda por título:
+
+```text
+GET /proyectos?titulo=visual
+```
+
+Filtro por estado:
+
+```text
+GET /proyectos?estado=pendiente
+```
+
+Filtro por usuario responsable:
+
+```text
+GET /proyectos?usuarioId=1
+```
+
+Paginación:
+
+```text
+GET /proyectos?pagina=1&limite=10
+```
+
+### Ejemplo de creación de proyecto
+
+```json
+{
+  "titulo": "Campaña audiovisual Orion",
+  "descripcion": "Producción de una campaña para redes sociales.",
+  "estado": "pendiente",
+  "fechaEntrega": "2026-11-30",
+  "presupuesto": 350000,
+  "usuarioId": 2
+}
+```
+
+## Relación entre modelos
+
+La aplicación implementa una relación uno-a-muchos:
+
+```text
+Usuario 1 ─────── N Proyecto
+```
+
+Un usuario puede tener varios proyectos y cada proyecto pertenece a un usuario.
+
+La relación se consulta mediante:
+
+```text
+GET /usuarios/1/proyectos
+```
+
+También se utiliza `include` de Sequelize para obtener al usuario responsable de cada proyecto.
+
+## Comparación SQL manual y Sequelize ORM
+
+El archivo:
+
+```text
+scripts/compararConsultas.js
+```
+
+realiza la misma consulta de dos maneras:
+
+1. SQL manual mediante `SELECT` e `INNER JOIN`.
+2. Sequelize ORM mediante `findAll()` e `include`.
+
+Ejecutar la comparación:
+
+```bash
+node scripts/compararConsultas.js
+```
+
+El resultado confirma si ambas consultas devuelven los mismos registros:
+
+```text
+¿Ambas consultas entregan el mismo resultado? SÍ
+```
+
+## Transacciones y rollback
+
+El archivo:
+
+```text
+scripts/probarTransaccion.js
+```
+
+demuestra una transacción que realiza dos operaciones:
+
+1. Crea un usuario temporal.
+2. Crea un proyecto asociado al usuario.
+
+Luego se provoca un error controlado y se ejecuta:
+
+```text
+ROLLBACK
+```
+
+Finalmente, el script verifica que ninguno de los registros temporales haya quedado almacenado.
+
+Ejecutar la prueba:
+
+```bash
+node scripts/probarTransaccion.js
+```
+
+Resultado esperado:
+
+```text
+[ROLLBACK] Transacción revertida correctamente.
+[VERIFICACIÓN] ¿El usuario quedó guardado? NO - CORRECTO
+[VERIFICACIÓN] ¿El proyecto quedó guardado? NO - CORRECTO
+```
+
+## Manejo de errores
+
+La API posee middlewares para:
+
+- Capturar rutas inexistentes.
+- Centralizar errores.
+- Validar identificadores.
+- Informar recursos no encontrados.
+- Validar datos recibidos.
+- Evitar correos electrónicos duplicados.
+- Evitar exponer información privada.
+
+Las respuestas mantienen una estructura similar a:
 
 ```json
 {
   "status": "success",
-  "message": "Servidor funcionando correctamente",
-  "data": {
-    "application": "CreativeFlow",
-    "port": "3000"
-  }
+  "message": "Operación realizada correctamente.",
+  "data": {}
 }
 ```
 
-### Ejemplo de ruta inexistente
+En caso de error:
 
 ```json
 {
   "status": "error",
-  "message": "Ruta no encontrada: /no-existe",
+  "message": "Descripción del error.",
   "data": null
 }
 ```
 
-## Archivos estáticos
+## Seguridad
 
-Express sirve los archivos ubicados en `public`.
+- Las contraseñas se cifran con bcrypt.
+- `passwordHash` se excluye de las respuestas.
+- Las credenciales se almacenan en `.env`.
+- `.env` está excluido mediante `.gitignore`.
+- `.env.example` no contiene contraseñas reales.
+- Las consultas ORM reducen la manipulación directa de SQL.
 
-La hoja de estilos puede comprobarse directamente en:
+## Repositorio
 
-```text
-http://localhost:3000/css/styles.css
-```
-
-La opción `index: false` permite que la ruta `/` sea procesada por el controlador antes de enviar `public/index.html`.
-
-## Registro de accesos
-
-Cada visita a `/status` queda registrada en:
-
-```text
-logs/log.txt
-```
-
-La aplicación utiliza `fs.appendFile()` para agregar información sin eliminar los registros anteriores.
-
-Ejemplo:
-
-```text
-Fecha: 09-08-2026 | Hora: 23:04:06 | Ruta: /status
-```
-
-Cada registro contiene:
-
-- Fecha.
-- Hora.
-- Ruta solicitada.
-
-## Decisiones técnicas
-
-### Elección de `index.js`
-
-Se utilizó `index.js` porque es una convención habitual para identificar el punto de entrada principal de una aplicación Node.js. También coincide con el campo `main` definido en `package.json`.
-
-### Scripts de ejecución
-
-Se creó `npm start` para ejecutar la aplicación de manera normal y `npm run dev` para facilitar el desarrollo mediante nodemon.
-
-Esta separación permite utilizar un comando estable para la ejecución y otro orientado a realizar modificaciones.
-
-### Arquitectura modular
-
-El proyecto se dividió en rutas, controladores, middlewares y servicios para separar responsabilidades y facilitar su mantenimiento.
-
-- `routes` define las direcciones disponibles.
-- `controllers` genera las respuestas.
-- `middlewares` procesa solicitudes y errores.
-- `services` contiene la lógica de registro en archivos.
-- `public` almacena el contenido estático.
-- `logs` conserva los accesos registrados.
-
-### Uso de archivos estáticos
-
-Se utilizó la carpeta `public` porque la aplicación necesita entregar una interfaz HTML y una hoja de estilos. No se incorporó un motor de plantillas porque esta primera versión no requiere generar vistas dinámicas desde el servidor.
-
-### Variables de entorno
-
-El puerto se configura mediante dotenv para evitar dejar configuraciones modificables escritas directamente en el código.
-
-El archivo `.env` no se incluye en Git porque puede contener información privada. En su lugar, `.env.example` documenta las variables necesarias.
-
-## Reflexión técnica
-
-La principal conclusión de esta etapa fue comprender que una aplicación backend no consiste solamente en iniciar un servidor. También requiere separar responsabilidades, controlar el flujo de las solicitudes, manejar errores y documentar correctamente su funcionamiento.
-
-La estructura modular permitirá incorporar nuevas funcionalidades sin concentrar todo el código en `index.js`. Esto facilitará la integración de PostgreSQL, Sequelize, operaciones CRUD, autenticación mediante JWT y subida de archivos durante los módulos siguientes.
-
-## Próximas etapas
-
-- Conectar PostgreSQL.
-- Implementar Sequelize como ORM.
-- Crear modelos y relaciones.
-- Desarrollar operaciones CRUD.
-- Implementar registro y autenticación de usuarios.
-- Proteger rutas mediante JWT.
-- Incorporar subida y validación de archivos.
-- Exponer una API RESTful.
-
-## Autora
-
-Johanna Romero
-
-Proyecto académico desarrollado para el curso Desarrollo de Aplicaciones Full Stack JavaScript Trainee.
-
-## Licencia
-
-ISC
+[CreativeFlow Backend en GitHub](https://github.com/Zkeh-x7/creativeflow-backend)
