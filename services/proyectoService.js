@@ -187,7 +187,165 @@ const crearProyecto = async ({
   });
 };
 
+const validarIdProyecto = (id) => {
+  const numeroId = Number(id);
+
+  if (!Number.isInteger(numeroId) || numeroId < 1) {
+    throw crearError(
+      "El ID del proyecto debe ser un número entero positivo.",
+      400
+    );
+  }
+
+  return numeroId;
+};
+
+const actualizarProyecto = async (id, datosRecibidos) => {
+  const numeroId = validarIdProyecto(id);
+
+  const proyecto = await Proyecto.findByPk(numeroId);
+
+  if (!proyecto) {
+    throw crearError("Proyecto no encontrado.", 404);
+  }
+
+  const datosActualizados = {};
+
+  if (datosRecibidos.titulo !== undefined) {
+    if (
+      typeof datosRecibidos.titulo !== "string" ||
+      !datosRecibidos.titulo.trim()
+    ) {
+      throw crearError("El título no puede estar vacío.", 400);
+    }
+
+    datosActualizados.titulo = datosRecibidos.titulo.trim();
+  }
+
+  if (datosRecibidos.descripcion !== undefined) {
+    if (
+      datosRecibidos.descripcion !== null &&
+      typeof datosRecibidos.descripcion !== "string"
+    ) {
+      throw crearError(
+        "La descripción debe ser un texto o un valor nulo.",
+        400
+      );
+    }
+
+    datosActualizados.descripcion =
+      typeof datosRecibidos.descripcion === "string"
+        ? datosRecibidos.descripcion.trim()
+        : null;
+  }
+
+  if (datosRecibidos.estado !== undefined) {
+    if (!estadosPermitidos.includes(datosRecibidos.estado)) {
+      throw crearError(
+        "El estado debe ser pendiente, en_progreso o completado.",
+        400
+      );
+    }
+
+    datosActualizados.estado = datosRecibidos.estado;
+  }
+
+  if (datosRecibidos.fechaEntrega !== undefined) {
+    if (
+      datosRecibidos.fechaEntrega !== null &&
+      (typeof datosRecibidos.fechaEntrega !== "string" ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(
+          datosRecibidos.fechaEntrega
+        ))
+    ) {
+      throw crearError(
+        "La fecha de entrega debe utilizar el formato YYYY-MM-DD.",
+        400
+      );
+    }
+
+    datosActualizados.fechaEntrega =
+      datosRecibidos.fechaEntrega;
+  }
+
+  if (datosRecibidos.presupuesto !== undefined) {
+    const numeroPresupuesto = Number(
+      datosRecibidos.presupuesto
+    );
+
+    if (
+      !Number.isFinite(numeroPresupuesto) ||
+      numeroPresupuesto < 0
+    ) {
+      throw crearError(
+        "El presupuesto debe ser un número igual o superior a cero.",
+        400
+      );
+    }
+
+    datosActualizados.presupuesto = numeroPresupuesto;
+  }
+
+  if (datosRecibidos.usuarioId !== undefined) {
+    const numeroUsuarioId = Number(datosRecibidos.usuarioId);
+
+    if (
+      !Number.isInteger(numeroUsuarioId) ||
+      numeroUsuarioId < 1
+    ) {
+      throw crearError(
+        "El ID del usuario debe ser un número entero positivo.",
+        400
+      );
+    }
+
+    const usuario = await Usuario.findByPk(numeroUsuarioId);
+
+    if (!usuario) {
+      throw crearError(
+        "El usuario responsable no existe.",
+        404
+      );
+    }
+
+    datosActualizados.usuarioId = numeroUsuarioId;
+  }
+
+  if (Object.keys(datosActualizados).length === 0) {
+    throw crearError(
+      "Debes enviar al menos un campo permitido para actualizar.",
+      400
+    );
+  }
+
+  await proyecto.update(datosActualizados);
+
+  return Proyecto.findByPk(numeroId, {
+    include: [incluirUsuario],
+  });
+};
+
+const eliminarProyecto = async (id) => {
+  const numeroId = validarIdProyecto(id);
+
+  const proyecto = await Proyecto.findByPk(numeroId, {
+    include: [incluirUsuario],
+  });
+
+  if (!proyecto) {
+    throw crearError("Proyecto no encontrado.", 404);
+  }
+
+  const proyectoEliminado = proyecto.toJSON();
+
+  await proyecto.destroy();
+
+  return proyectoEliminado;
+};
+
 module.exports = {
   listarProyectos,
   crearProyecto,
+  actualizarProyecto,
+  eliminarProyecto,
 };
